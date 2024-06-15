@@ -1,37 +1,45 @@
-name: 'CI'
+name: "CI"
 on:
   push:
-    branches-ignore:
-      - 'release/**'
-      - 'docs'
-    tags-ignore:
-      - '**'
+    branches:
+      - "master"
+      - "hotfix/**"
     paths-ignore:
-      - '.github/**'
-      - '!.github/workflows/ci.yml'
-      - '.travis.yml'
-      - '.gitignore'
-      - 'README.md'
-      - 'LICENSE'
+      - ".github/**"
+      - "!.github/workflows/ci.yml"
+      - ".gitignore"
+      - "docs/**"
+      - "README.md"
+      - "LICENSE"
   pull_request:
-    paths:
-      - '**'
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     strategy:
       matrix:
-        ruby: [2.5, 2.6, 2.7, 3]
+        ruby: ["3.1", "3.2", "3.3"]
+
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # for posts's lastmod
+          fetch-depth: 0 # for posts's lastmod
+
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+
+      - name: Build Assets
+        run: npm i && npm run build
+
       - name: Test Site
-        run: bash tools/deploy.sh --dry-run
+        run: bash tools/test.sh
